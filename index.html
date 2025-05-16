@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Разграбление Корованов: Сага Четырех Зон</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #333; color: white; font-family: Arial, sans-serif; }
+        canvas { display: block; }
+        #ui-container { position: absolute; top: 10px; left: 10px; padding: 10px; background-color: rgba(0,0,0,0.5); border-radius: 5px; }
+        #ui-container p, #ui-container button, #ui-container select { margin: 5px 0; }
+        .eye-patch { position: absolute; top: 0; width: 50%; height: 100%; background-color: rgba(0,0,0,0.85); display: none; pointer-events: none; z-index: 1000; }
+        #eye-patch-left { left: 0; }
+        #eye-patch-right { right: 0; }
+    </style>
+</head>
+<body>
+    <div id="ui-container">
+        <h3>Статус Игрока</h3>
+        <p>
+            Фракция:
+            <select id="faction-select">
+                <option value="elf">Лесные Эльфы</option>
+                <option value="guard">Охрана Дворца</option>
+                <option value="villain">Злодей</option>
+            </select>
+            <button id="choose-faction">Выбрать</button>
+        </p>
+        <p>Текущая фракция: <span id="player-faction">Не выбрана</span></p>
+        <p>Здоровье: <span id="player-health">100</span></p>
+        <p>Золото: <span id="player-gold">0</span></p>
+        <button id="save-game">Сохранить</button>
+        <button id="load-game">Загрузить</button>
+        <p>Управление: WASD для движения, пробел для атаки</p>
+    </div>
+
+    <div id="eye-patch-left" class="eye-patch"></div>
+    <div id="eye-patch-right" class="eye-patch"></div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.150.0/build/three.module.js"
+        }
+    }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
