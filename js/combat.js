@@ -2,6 +2,7 @@ export function attackCaravan(player, caravanMgr, caravan) {
     const loot = getCaravanLoot(caravan.type);
     player.gold += loot.gold;
     caravanMgr.removeCaravan(caravan);
+    showLootPanel(loot);
     if (Math.random() < 0.3) {
         const eyes = ['leftEye', 'rightEye'];
         const eye = eyes[Math.floor(Math.random() * eyes.length)];
@@ -11,6 +12,13 @@ export function attackCaravan(player, caravanMgr, caravan) {
             document.getElementById(patchId).style.display = 'block';
         }
     }
+}
+
+function showLootPanel(loot) {
+    const panel = document.getElementById('loot-panel');
+    const itemsDiv = document.getElementById('loot-items');
+    itemsDiv.innerHTML = `<p>Золото: ${loot.gold}</p>`;
+    panel.style.display = 'block';
 }
 
 function getCaravanLoot(type) {
