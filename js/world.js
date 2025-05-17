@@ -43,15 +43,14 @@ export class GameWorld {
         const spriteTexture = new THREE.TextureLoader().load('https://dummyimage.com/128x128/228B22/006400.png&text=Tree');
         const spriteMaterial = new THREE.SpriteMaterial({ map: spriteTexture });
         const sprite = new THREE.Sprite(spriteMaterial);
-        sprite.position.copy(pos);
-        sprite.position.y = 2;
+        sprite.position.set(0, 2, 0);
 
         const tree3d = this.createTreeMesh();
-        tree3d.position.copy(pos);
 
         const lod = new THREE.LOD();
         lod.addLevel(tree3d, 0);
         lod.addLevel(sprite, 20);
+        lod.position.copy(pos);
         this.scene.add(lod);
         this.trees.push(lod);
     }
