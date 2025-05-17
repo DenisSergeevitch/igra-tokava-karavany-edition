@@ -15,6 +15,8 @@ export class Player {
         };
         this.speed = 0.1;
         this.mesh = this.createMesh();
+        this.isAttacking = false;
+        this.attackTimer = 0;
     }
 
     createMesh() {
@@ -29,5 +31,24 @@ export class Player {
     move(dir) {
         const moveSpeed = this.speed * (this.bodyParts.leftLeg && this.bodyParts.rightLeg ? 1 : 0.5);
         this.mesh.position.add(dir.multiplyScalar(moveSpeed));
+    }
+
+    attack() {
+        if (!this.isAttacking) {
+            this.isAttacking = true;
+            this.attackTimer = 0;
+        }
+    }
+
+    update(delta) {
+        if (this.isAttacking) {
+            this.attackTimer += delta;
+            const progress = this.attackTimer / 0.3;
+            this.mesh.rotation.y = Math.sin(progress * Math.PI) * 0.8;
+            if (this.attackTimer >= 0.3) {
+                this.mesh.rotation.y = 0;
+                this.isAttacking = false;
+            }
+        }
     }
 }

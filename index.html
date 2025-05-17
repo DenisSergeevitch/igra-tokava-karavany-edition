@@ -11,6 +11,7 @@
         .eye-patch { position: absolute; top: 0; width: 50%; height: 100%; background-color: rgba(0,0,0,0.85); display: none; pointer-events: none; z-index: 1000; }
         #eye-patch-left { left: 0; }
         #eye-patch-right { right: 0; }
+        #loot-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0,0,0,0.8); color: #fff; padding: 20px; border: 1px solid #555; display: none; z-index: 1001; }
     </style>
 </head>
 <body>
@@ -35,6 +36,11 @@
 
     <div id="eye-patch-left" class="eye-patch"></div>
     <div id="eye-patch-right" class="eye-patch"></div>
+    <div id="loot-panel">
+        <h3>Добыча</h3>
+        <div id="loot-items"></div>
+        <button id="close-loot">Закрыть</button>
+    </div>
 
     <script type="importmap">
     {

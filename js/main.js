@@ -7,6 +7,8 @@ import { saveGame, loadGame } from './save.js';
 
 let scene, camera, renderer;
 let player, world, caravans;
+let lastTime = 0;
+let spacePrev = false;
 const keys = {};
 
 function init() {
@@ -46,6 +48,9 @@ function setupUI() {
             alert('Загружено');
         }
     });
+    document.getElementById('close-loot').addEventListener('click', () => {
+        document.getElementById('loot-panel').style.display = 'none';
+    });
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
@@ -81,7 +86,12 @@ function handleInput() {
         camera.position.z = player.mesh.position.z + 10;
         camera.lookAt(player.mesh.position);
     }
-    if (keys[' ']) attemptAttack();
+    if (keys[' ']) {
+        if (!spacePrev) attemptAttack();
+        spacePrev = true;
+    } else {
+        spacePrev = false;
+    }
 }
 
 function attemptAttack() {
@@ -91,14 +101,18 @@ function attemptAttack() {
     });
     if (target) {
         attackCaravan(player, caravans, target);
+        player.attack();
         updateUI();
     }
 }
 
-function animate() {
+function animate(time) {
     requestAnimationFrame(animate);
+    const delta = (time - lastTime) / 1000;
+    lastTime = time;
     handleInput();
-    caravans.update(0.016);
+    player.update(delta);
+    caravans.update(delta);
     world.update();
     renderer.render(scene, camera);
 }
