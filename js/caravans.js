@@ -5,6 +5,8 @@ export class CaravanManager {
         this.scene = scene;
         this.caravans = [];
         this.spawnTimer = 0;
+        // moveSpeed controls how fast caravans travel per second
+        this.moveSpeed = 0.6;
     }
 
     spawnCaravan() {
@@ -27,7 +29,7 @@ export class CaravanManager {
             this.spawnTimer = 0;
         }
         this.caravans.forEach(c => {
-            c.mesh.position.z += 0.01;
+            c.mesh.position.z += this.moveSpeed * delta;
         });
         this.caravans = this.caravans.filter(c => {
             if (c.mesh.position.z >= c.targetZ) {
