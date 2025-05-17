@@ -28,7 +28,8 @@ function init() {
     caravans = new CaravanManager(scene);
 
     setupUI();
-    animate();
+    // start animation loop with an initial timestamp
+    animate(0);
 }
 
 function setupUI() {
