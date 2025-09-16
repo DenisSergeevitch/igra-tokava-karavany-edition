@@ -4,21 +4,31 @@ import { GameWorld } from './world.js';
 import { CaravanManager } from './caravans.js';
 import { attackCaravan } from './combat.js';
 import { saveGame, loadGame } from './save.js';
+import { createSkyTexture } from './textures.js';
 
 let scene, camera, renderer;
 let player, world, caravans;
 let lastTime = 0;
 const keys = {};
+const cameraOffset = new THREE.Vector3(0, 5, 10);
+const desiredCameraPosition = new THREE.Vector3();
+const cameraLookTarget = new THREE.Vector3();
 
 function init() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87ceeb);
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 5, 10);
-    camera.lookAt(0, 0, 0);
+    scene.background = createSkyTexture();
+    scene.fog = new THREE.Fog(0xaecbff, 40, 180);
+
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
+    camera.position.set(0, 6, 14);
+
     renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
     document.body.appendChild(renderer.domElement);
 
     player = new Player();
@@ -28,14 +38,15 @@ function init() {
     caravans = new CaravanManager(scene);
 
     setupUI();
-    // start animation loop with an initial timestamp
-    animate(0);
+    updateUI();
+
+    requestAnimationFrame(animate);
 }
 
 function setupUI() {
     document.getElementById('choose-faction').addEventListener('click', () => {
         const sel = document.getElementById('faction-select');
-        player.faction = sel.value;
+        player.setFaction(sel.value);
         updateUI();
     });
     document.getElementById('save-game').addEventListener('click', () => {
@@ -52,8 +63,20 @@ function setupUI() {
         document.getElementById('loot-panel').style.display = 'none';
     });
     window.addEventListener('resize', onWindowResize);
-    window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+    window.addEventListener('keydown', e => {
+        const key = e.key === ' ' ? 'space' : e.key.toLowerCase();
+        if (!keys[key]) {
+            keys[key] = true;
+            if (key === 'space') {
+                e.preventDefault();
+                attemptAttack();
+            }
+        }
+    });
+    window.addEventListener('keyup', e => {
+        const key = e.key === ' ' ? 'space' : e.key.toLowerCase();
+        keys[key] = false;
+    });
 }
 
 function onWindowResize() {
@@ -69,30 +92,28 @@ function updateUI() {
         villain: 'Злодей'
     };
     document.getElementById('player-faction').textContent = factionNames[player.faction] || 'Не выбрана';
-    document.getElementById('player-health').textContent = player.health;
+    document.getElementById('player-health').textContent = Math.round(player.health);
     document.getElementById('player-gold').textContent = player.gold;
 }
 
-function handleInput() {
+function handleInput(delta) {
     const dir = new THREE.Vector3();
-    if (keys['w']) dir.z -= 1;
-    if (keys['s']) dir.z += 1;
-    if (keys['a']) dir.x -= 1;
-    if (keys['d']) dir.x += 1;
+    if (keys['w'] || keys['arrowup']) dir.z -= 1;
+    if (keys['s'] || keys['arrowdown']) dir.z += 1;
+    if (keys['a'] || keys['arrowleft']) dir.x -= 1;
+    if (keys['d'] || keys['arrowright']) dir.x += 1;
     if (dir.lengthSq() > 0) {
         dir.normalize();
-        player.move(dir);
-        camera.position.x = player.mesh.position.x;
-        camera.position.z = player.mesh.position.z + 10;
-        camera.lookAt(player.mesh.position);
+        player.move(dir, delta);
     }
-    if (keys[' ']) attemptAttack();
 }
 
 function attemptAttack() {
     let target = null;
     caravans.caravans.forEach(c => {
-        if (c.mesh.position.distanceTo(player.mesh.position) < 2) target = c;
+        if (!target && c.mesh.position.distanceTo(player.mesh.position) < 2.2) {
+            target = c;
+        }
     });
     if (target) {
         attackCaravan(player, caravans, target);
@@ -101,14 +122,26 @@ function attemptAttack() {
     }
 }
 
+function updateCamera() {
+    desiredCameraPosition.copy(player.mesh.position).add(cameraOffset);
+    camera.position.lerp(desiredCameraPosition, 0.08);
+    cameraLookTarget.copy(player.mesh.position);
+    cameraLookTarget.y += 1.5;
+    camera.lookAt(cameraLookTarget);
+}
+
 function animate(time) {
     requestAnimationFrame(animate);
-    const delta = (time - lastTime) / 1000;
+    let delta = 0;
+    if (lastTime !== 0) {
+        delta = Math.min((time - lastTime) / 1000, 0.12);
+    }
     lastTime = time;
-    handleInput();
+    handleInput(delta);
     player.update(delta);
     caravans.update(delta);
-    world.update();
+    world.update(delta);
+    updateCamera();
     renderer.render(scene, camera);
 }
 
