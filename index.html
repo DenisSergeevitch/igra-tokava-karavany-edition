@@ -6,12 +6,19 @@
     <style>
         body { margin: 0; overflow: hidden; background-color: #333; color: white; font-family: Arial, sans-serif; }
         canvas { display: block; }
-        #ui-container { position: absolute; top: 10px; left: 10px; padding: 10px; background-color: rgba(0,0,0,0.5); border-radius: 5px; }
+        #ui-container { position: absolute; top: 10px; left: 10px; padding: 12px 14px; background-color: rgba(0,0,0,0.5); border-radius: 6px; backdrop-filter: blur(4px); }
         #ui-container p, #ui-container button, #ui-container select { margin: 5px 0; }
         .eye-patch { position: absolute; top: 0; width: 50%; height: 100%; background-color: rgba(0,0,0,0.85); display: none; pointer-events: none; z-index: 1000; }
         #eye-patch-left { left: 0; }
         #eye-patch-right { right: 0; }
-        #loot-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0,0,0,0.8); color: #fff; padding: 20px; border: 1px solid #555; display: none; z-index: 1001; }
+        #loot-panel, #trade-panel { position: absolute; left: 50%; transform: translateX(-50%); min-width: 260px; max-width: 340px; background-color: rgba(0,0,0,0.82); color: #fff; padding: 18px; border: 1px solid #555; border-radius: 8px; display: none; z-index: 1001; box-shadow: 0 12px 24px rgba(0,0,0,0.45); }
+        #loot-panel { top: 18%; }
+        #trade-panel { top: 26%; }
+        #loot-panel h3, #trade-panel h3 { margin-top: 0; }
+        #interaction-hint { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); padding: 8px 14px; border-radius: 20px; background-color: rgba(0,0,0,0.6); font-size: 14px; display: none; z-index: 900; }
+        #loot-items p { margin: 6px 0; }
+        #trade-panel button { display: block; width: 100%; margin: 6px 0; padding: 8px; }
+        #trade-status { min-height: 18px; font-size: 14px; color: #d3e6ff; margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -29,9 +36,10 @@
         <p>Текущая фракция: <span id="player-faction">Не выбрана</span></p>
         <p>Здоровье: <span id="player-health">100</span></p>
         <p>Золото: <span id="player-gold">0</span></p>
+        <p>Скорость: <span id="player-speed">5</span></p>
         <button id="save-game">Сохранить</button>
         <button id="load-game">Загрузить</button>
-        <p>Управление: WASD для движения, пробел для атаки</p>
+        <p>Управление: кликните в игру, чтобы повернуть камеру мышью. WASD для движения, пробел для атаки, E — взаимодействие</p>
     </div>
 
     <div id="eye-patch-left" class="eye-patch"></div>
@@ -41,6 +49,15 @@
         <div id="loot-items"></div>
         <button id="close-loot">Закрыть</button>
     </div>
+    <div id="trade-panel">
+        <h3 id="trade-title">Торговец</h3>
+        <p>Золото можно потратить на услуги союзников.</p>
+        <button id="buy-heal">Купить лечение (30 золота)</button>
+        <button id="buy-speed">Заказать быстрых лошадей (80 золота)</button>
+        <div id="trade-status"></div>
+        <button id="close-trade">Закрыть</button>
+    </div>
+    <div id="interaction-hint"></div>
 
     <script type="importmap">
     {

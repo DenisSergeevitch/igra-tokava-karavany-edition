@@ -8,6 +8,8 @@ export class Player {
         this.faction = null;
         this.health = 100;
         this.gold = 0;
+        this.baseSpeed = 5;
+        this.speedBonus = 0;
         this.bodyParts = {
             leftArm: true,
             rightArm: true,
@@ -16,7 +18,9 @@ export class Player {
             leftEye: true,
             rightEye: true
         };
-        this.speed = 5; // units per second
+        this.inventory = [];
+        this.groundHeightProvider = null;
+        this.movementBounds = null;
         this.isAttacking = false;
         this.attackTimer = 0;
         this.textureCache = {};
@@ -58,9 +62,11 @@ export class Player {
 
     move(dir, delta = 1 / 60) {
         const legFactor = this.bodyParts.leftLeg && this.bodyParts.rightLeg ? 1 : 0.5;
-        const distance = this.speed * legFactor * delta;
+        const effectiveSpeed = this.baseSpeed + this.speedBonus;
+        const distance = effectiveSpeed * legFactor * delta;
         this.mesh.position.addScaledVector(dir, distance);
-        this.mesh.position.y = PLAYER_EYE_HEIGHT;
+        this.clampToBounds();
+        this.updateGroundHeight();
         if (dir.lengthSq() > 0) {
             const angle = Math.atan2(dir.x, dir.z);
             this.mesh.rotation.y = angle;
@@ -83,5 +89,63 @@ export class Player {
                 this.isAttacking = false;
             }
         }
+        this.updateGroundHeight();
+    }
+
+    setGroundHeightProvider(fn) {
+        this.groundHeightProvider = fn;
+        this.updateGroundHeight();
+    }
+
+    setMovementBounds(bounds) {
+        this.movementBounds = bounds;
+        this.clampToBounds();
+    }
+
+    updateGroundHeight() {
+        if (typeof this.groundHeightProvider === 'function') {
+            const ground = this.groundHeightProvider(this.mesh.position.x, this.mesh.position.z);
+            this.mesh.position.y = ground + PLAYER_EYE_HEIGHT;
+        } else {
+            this.mesh.position.y = PLAYER_EYE_HEIGHT;
+        }
+    }
+
+    clampToBounds() {
+        if (typeof this.movementBounds === 'number' && this.movementBounds > 0) {
+            this.mesh.position.x = THREE.MathUtils.clamp(this.mesh.position.x, -this.movementBounds, this.movementBounds);
+            this.mesh.position.z = THREE.MathUtils.clamp(this.mesh.position.z, -this.movementBounds, this.movementBounds);
+        }
+    }
+
+    snapToGround() {
+        this.updateGroundHeight();
+    }
+
+    addLoot(loot) {
+        if (loot.items && loot.items.length) {
+            this.inventory.push(...loot.items);
+        }
+        if (loot.resources) {
+            this.inventory.push(...Object.keys(loot.resources).map(res => `${res} (${loot.resources[res]})`));
+        }
+    }
+
+    spendGold(amount) {
+        if (this.gold < amount) return false;
+        this.gold -= amount;
+        return true;
+    }
+
+    heal(amount) {
+        this.health = Math.min(100, this.health + amount);
+    }
+
+    applySpeedUpgrade(amount = 0.8) {
+        this.speedBonus += amount;
+    }
+
+    getMoveSpeed() {
+        return this.baseSpeed + this.speedBonus;
     }
 }
